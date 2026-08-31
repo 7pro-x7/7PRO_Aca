@@ -99,7 +99,7 @@ dependencies {
 
     // Supabase v2.5.3 (stable, compatible with Kotlin 1.9.x)
     implementation(platform("io.github.jan-tennert.supabase:bom:2.5.3"))
-    implementation("io.github.jan-tennert.supabase:auth-kt")
+    implementation("io.github.jan-tennert.supabase:gotrue-kt")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.github.jan-tennert.supabase:storage-kt")
