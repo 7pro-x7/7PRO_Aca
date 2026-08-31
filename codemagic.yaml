@@ -1,23 +1,16 @@
 # ============================================================
 # 7PRO Management - Codemagic CI/CD Configuration
 # ============================================================
-# 
+#
 # SETUP INSTRUCTIONS:
 # 1. Connect your GitHub repo to Codemagic
-# 2. In Codemagic > Environment variables, set:
+# 2. Upload your keystore at: Team settings > codemagic.yaml settings > Code signing identities > Android keystores
+#    - Reference name: sevenpro-keystore
+#    - Keystore password, Key alias, Key password
+# 3. In Codemagic > Environment variables, create group "sevenpro_credentials":
 #    - SUPABASE_URL: Your Supabase project URL
 #    - SUPABASE_ANON_KEY: Your Supabase anon/public key
-#    - KEYSTORE_BASE64: Base64-encoded keystore file
-#    - KEYSTORE_PASSWORD: Your keystore password
-#    - KEY_ALIAS: Your key alias
-#    - KEY_PASSWORD: Your key password
-#    - PLAY_STORE_JSON_KEY: Google Play Console service account JSON (for auto-deploy)
-#
-# 3. To generate keystore base64:
-#    base64 -i your-keystore.jks | pbcopy
-#
-# 4. To generate a keystore:
-#    keytool -genkeypair -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias sevenpro
+#    - PLAY_STORE_JSON_KEY: Google Play Console service account JSON (optional, for auto-deploy)
 #
 # ============================================================
 
@@ -27,6 +20,9 @@ workflows:
     name: PR Validation
     max_build_duration: 30
     instance_type: mac_mini_m2
+    environment:
+      groups:
+        - sevenpro_credentials
     triggering:
       events:
         - push
@@ -34,20 +30,15 @@ workflows:
       branch_patterns:
         - pattern: '*'
           include: true
-    environment:
-      groups:
-        - sevenpro_credentials
     scripts:
-      - name: Set up JDK 17
+      - name: Set up JDK
         script: |
           #!/bin/bash
           java -version
           echo "JAVA_HOME=$JAVA_HOME"
-      - name: Decode Keystore
-        script: |
-          echo $KEYSTORE_BASE64 | base64 --decode > $CM_BUILD_DIR/app/release-key.jks
       - name: Setup local.properties
         script: |
+          #!/bin/bash
           echo "SUPABASE_URL=$SUPABASE_URL" > local.properties
           echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> local.properties
       - name: Make gradlew executable
@@ -58,7 +49,7 @@ workflows:
         script: ./gradlew lintDebug
       - name: Run Unit Tests
         script: ./gradlew testDebugUnitTest
-      - name: Debug Build
+      - name: Build Debug APK
         script: ./gradlew assembleDebug
     artifacts:
       - app/build/outputs/apk/debug/**/*.apk
@@ -68,80 +59,39 @@ workflows:
     name: Production Build & Deploy
     max_build_duration: 60
     instance_type: mac_mini_m2
-    triggering:
-      events:
-        - push
-        - tag
-      branch_patterns:
-        - pattern: 'main'
-          include: true
     environment:
       groups:
         - sevenpro_credentials
       android_signing:
         - sevenpro-keystore
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'main'
+          include: true
     scripts:
       - name: Set up environment
         script: |
           #!/bin/bash
-          echo "Building 7PRO Management v$BUILD_ID"
+          echo "Building 7PRO Management"
           echo "Branch: $BRANCH"
           echo "Commit: $COMMIT"
-      
-      - name: Decode Keystore
+      - name: Setup local.properties
         script: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo $KEYSTORE_BASE64 | base64 --decode > $CM_BUILD_DIR/app/release-key.jks
-            export KEYSTORE_FILE=$CM_BUILD_DIR/app/release-key.jks
-          fi
-      
+          #!/bin/bash
+          echo "SUPABASE_URL=$SUPABASE_URL" > local.properties
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> local.properties
       - name: Make gradlew executable
         script: chmod +x gradlew
-      - name: Setup gradle properties
-        script: |
-          #!/bin/bash
-          cat >> gradle.properties << EOF
-          
-          # CI/CD Configuration
-          SUPABASE_URL=$SUPABASE_URL
-          SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-          KEYSTORE_FILE=$KEYSTORE_FILE
-          KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
-          KEY_ALIAS=$KEY_ALIAS
-          KEY_PASSWORD=$KEY_PASSWORD
-          EOF
-      
       - name: Install dependencies
         script: ./gradlew dependencies
-      
       - name: Run Tests
         script: ./gradlew testReleaseUnitTest
-      
       - name: Build Release APK
-        script: |
-          #!/bin/bash
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            ./gradlew assembleRelease \
-              -PKEYSTORE_FILE=$KEYSTORE_FILE \
-              -PKEYSTORE_PASSWORD=$KEYSTORE_PASSWORD \
-              -PKEY_ALIAS=$KEY_ALIAS \
-              -PKEY_PASSWORD=$KEY_PASSWORD
-          else
-            echo "Warning: No keystore provided, building debug variant"
-            ./gradlew assembleDebug
-          fi
-      
-      - name: Build Release AAB (for Play Store)
-        script: |
-          #!/bin/bash
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            ./gradlew bundleRelease \
-              -PKEYSTORE_FILE=$KEYSTORE_FILE \
-              -PKEYSTORE_PASSWORD=$KEYSTORE_PASSWORD \
-              -PKEY_ALIAS=$KEY_ALIAS \
-              -PKEY_PASSWORD=$KEY_PASSWORD
-          fi
-      
+        script: ./gradlew assembleRelease
+      - name: Build Release AAB
+        script: ./gradlew bundleRelease
       - name: Generate Version Info
         script: |
           #!/bin/bash
@@ -151,12 +101,10 @@ workflows:
           echo "VERSION_NAME=$VERSION_NAME" > build_info.txt
           echo "VERSION_CODE=$VERSION_CODE" >> build_info.txt
           echo "BUILD_DATE=$(date)" >> build_info.txt
-    
     artifacts:
       - app/build/outputs/apk/release/**/*.apk
       - app/build/outputs/bundle/release/**/*.aab
       - build_info.txt
-    
     publishing:
       email:
         recipients:
@@ -164,7 +112,6 @@ workflows:
         notify:
           success: true
           failure: true
-      
       google_play:
         credentials: $PLAY_STORE_JSON_KEY
         track: internal
@@ -174,6 +121,11 @@ workflows:
     name: Beta Build
     max_build_duration: 45
     instance_type: mac_mini_m2
+    environment:
+      groups:
+        - sevenpro_credentials
+      android_signing:
+        - sevenpro-keystore
     triggering:
       events:
         - push
@@ -182,49 +134,20 @@ workflows:
           include: true
         - pattern: 'release/*'
           include: true
-    environment:
-      groups:
-        - sevenpro_credentials
     scripts:
-      - name: Decode Keystore
-        script: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo $KEYSTORE_BASE64 | base64 --decode > $CM_BUILD_DIR/app/release-key.jks
-          fi
-      
-      - name: Make gradlew executable
-        script: chmod +x gradlew
-      - name: Setup properties
-        script: |
-          cat >> gradle.properties << EOF
-          
-          SUPABASE_URL=$SUPABASE_URL
-          SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-          KEYSTORE_FILE=$CM_BUILD_DIR/app/release-key.jks
-          KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD
-          KEY_ALIAS=$KEY_ALIAS
-          KEY_PASSWORD=$KEY_PASSWORD
-          EOF
-      
-      - name: Install dependencies
-        script: ./gradlew dependencies
-      
-      - name: Build Beta APK
+      - name: Setup local.properties
         script: |
           #!/bin/bash
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            ./gradlew assembleRelease \
-              -PKEYSTORE_FILE=$CM_BUILD_DIR/app/release-key.jks \
-              -PKEYSTORE_PASSWORD=$KEYSTORE_PASSWORD \
-              -PKEY_ALIAS=$KEY_ALIAS \
-              -PKEY_PASSWORD=$KEY_PASSWORD
-          else
-            ./gradlew assembleDebug
-          fi
-    
+          echo "SUPABASE_URL=$SUPABASE_URL" > local.properties
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> local.properties
+      - name: Make gradlew executable
+        script: chmod +x gradlew
+      - name: Install dependencies
+        script: ./gradlew dependencies
+      - name: Build Beta APK
+        script: ./gradlew assembleRelease
     artifacts:
       - app/build/outputs/apk/**/*.apk
-    
     publishing:
       email:
         recipients:
@@ -232,15 +155,3 @@ workflows:
         notify:
           success: true
           failure: true
-
-# ============================================================
-# Environment Groups (configure in Codemagic UI)
-# ============================================================
-# sevenpro_credentials:
-#   SUPABASE_URL: https://your-project.supabase.co
-#   SUPABASE_ANON_KEY: your-anon-key
-#   KEYSTORE_BASE64: <base64-encoded .jks file>
-#   KEYSTORE_PASSWORD: your-keystore-password
-#   KEY_ALIAS: your-key-alias
-#   KEY_PASSWORD: your-key-password
-#   PLAY_STORE_JSON_KEY: <google play service account JSON>
