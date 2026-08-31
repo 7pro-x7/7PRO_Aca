@@ -50,6 +50,8 @@ workflows:
         script: |
           echo "SUPABASE_URL=$SUPABASE_URL" > local.properties
           echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> local.properties
+      - name: Make gradlew executable
+        script: chmod +x gradlew
       - name: Install dependencies
         script: ./gradlew dependencies
       - name: Run Lint
@@ -93,6 +95,8 @@ workflows:
             export KEYSTORE_FILE=$CM_BUILD_DIR/app/release-key.jks
           fi
       
+      - name: Make gradlew executable
+        script: chmod +x gradlew
       - name: Setup gradle properties
         script: |
           #!/bin/bash
@@ -188,6 +192,8 @@ workflows:
             echo $KEYSTORE_BASE64 | base64 --decode > $CM_BUILD_DIR/app/release-key.jks
           fi
       
+      - name: Make gradlew executable
+        script: chmod +x gradlew
       - name: Setup properties
         script: |
           cat >> gradle.properties << EOF
