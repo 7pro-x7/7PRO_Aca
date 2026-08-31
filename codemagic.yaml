@@ -27,15 +27,13 @@ workflows:
     name: PR Validation
     max_build_duration: 30
     instance_type: mac_mini
-    triggers:
-      push:
-        branch_patterns:
-          - pattern: '*'
-            include: true
-      pull_request:
-        branch_patterns:
-          - pattern: '*'
-            include: true
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: '*'
+          include: true
     environment:
       groups:
         - sevenpro_credentials
@@ -68,17 +66,16 @@ workflows:
     name: Production Build & Deploy
     max_build_duration: 60
     instance_type: mac_mini
-    triggers:
+    triggering:
+      events:
+        - push
+        - tag
       branch_patterns:
         - pattern: 'main'
-          include: true
-      tag_patterns:
-        - pattern: 'v*'
           include: true
     environment:
       groups:
         - sevenpro_credentials
-      # Android signing
       android_signing:
         - sevenpro-keystore
     scripts:
@@ -164,7 +161,6 @@ workflows:
           success: true
           failure: true
       
-      # Google Play Store (auto-deploy)
       google_play:
         credentials: $PLAY_STORE_JSON_KEY
         track: internal
@@ -179,7 +175,9 @@ workflows:
     name: Beta Build
     max_build_duration: 45
     instance_type: mac_mini
-    triggers:
+    triggering:
+      events:
+        - push
       branch_patterns:
         - pattern: 'develop'
           include: true
