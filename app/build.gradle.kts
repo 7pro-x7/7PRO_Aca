@@ -97,26 +97,26 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
 
-    // Supabase - using correct library names (auth-kt not gotrue-kt)
-    implementation(platform("io.github.jan-tennert.supabase:bom:2.4.1"))
+    // Supabase v3.8.0 - requires Ktor 3.x
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.8.0"))
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.github.jan-tennert.supabase:storage-kt")
     implementation("io.github.jan-tennert.supabase:functions-kt")
 
-    // Ktor (for Supabase HTTP)
-    implementation("io.ktor:ktor-client-android:2.3.7")
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+    // Ktor 3.x (required by Supabase v3.x)
+    implementation("io.ktor:ktor-client-android:3.0.2")
+    implementation("io.ktor:ktor-client-content-negotiation:3.0.2")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.2")
 
     // Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     // DataStore (for language/theme prefs)
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    // Charts (for dashboard) - using vico which is well-maintained
+    // Charts (for dashboard)
     implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
 
     // PDF generation
