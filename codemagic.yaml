@@ -26,7 +26,7 @@ workflows:
   pr-validation:
     name: PR Validation
     max_build_duration: 30
-    instance_type: mac_mini
+    instance_type: linux_x2
     triggering:
       events:
         - push
@@ -65,7 +65,7 @@ workflows:
   production-build:
     name: Production Build & Deploy
     max_build_duration: 60
-    instance_type: mac_mini
+    instance_type: linux_x2
     triggering:
       events:
         - push
@@ -169,7 +169,7 @@ workflows:
   beta-build:
     name: Beta Build
     max_build_duration: 45
-    instance_type: mac_mini
+    instance_type: linux_x2
     triggering:
       events:
         - push
