@@ -97,9 +97,9 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
 
-    // Supabase
-    implementation("io.github.jan-tennert.supabase:bom:2.1.0")
-    implementation("io.github.jan-tennert.supabase:gotrue-kt")
+    // Supabase - using correct library names (auth-kt not gotrue-kt)
+    implementation(platform("io.github.jan-tennert.supabase:bom:2.4.1"))
+    implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.github.jan-tennert.supabase:storage-kt")
@@ -116,12 +116,7 @@ dependencies {
     // DataStore (for language/theme prefs)
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    // Accompanist (permissions, system UI)
-    implementation("com.google.accompanist:accompanist-permissions:0.33.2")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.33.2")
-
-    // Charts (for dashboard)
-    implementation("io.github.bytebeats:compose-charts:1.0.0")
+    // Charts (for dashboard) - using vico which is well-maintained
     implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
 
     // PDF generation
