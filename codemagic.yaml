@@ -164,11 +164,6 @@ workflows:
       google_play:
         credentials: $PLAY_STORE_JSON_KEY
         track: internal
-        status: draft
-        default_track: internal
-        rollout_percent: 100
-        artifact_path: app/build/outputs/bundle/release/*.aab
-        changes_not_sent_for_review: true
 
   # ─── Beta Build (for testing) ──────────────────────────────
   beta-build:
