@@ -97,18 +97,18 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
 
-    // Supabase v3.8.0 - requires Ktor 3.x
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.8.0"))
+    // Supabase v2.5.3 (stable, compatible with Kotlin 1.9.x)
+    implementation(platform("io.github.jan-tennert.supabase:bom:2.5.3"))
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.github.jan-tennert.supabase:storage-kt")
     implementation("io.github.jan-tennert.supabase:functions-kt")
 
-    // Ktor 3.x (required by Supabase v3.x)
-    implementation("io.ktor:ktor-client-android:3.0.2")
-    implementation("io.ktor:ktor-client-content-negotiation:3.0.2")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.2")
+    // Ktor 2.3.13 (required by Supabase v2.x)
+    implementation("io.ktor:ktor-client-android:2.3.13")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.13")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.13")
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
